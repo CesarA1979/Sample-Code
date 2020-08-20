@@ -1,0 +1,45 @@
+<mat-progress-bar *ngIf="busy" mode="indeterminate"></mat-progress-bar>
+<mat-card>
+  <mat-card-content>
+    <app-combobox style="width: 300px" [itemList$]="itemList$" (valueChanged)="onValueChanged($event)"></app-combobox>
+    <mat-form-field style="margin-left: 20px">
+      <mat-select [(value)]="selectedEnvironment" placeholder="Environment" (selectionChange)="environmentSelected($event.value)">
+        <mat-option *ngFor="let item of appService.environments" [value]="item">{{ item }}</mat-option>
+      </mat-select>
+    </mat-form-field>
+    <br />
+    <br />
+    <div class="flexrow">
+      <mat-form-field>
+        <input matInput placeholder="Tax ID" [value]="resultValue" title="Generated result">
+      </mat-form-field>
+      <mat-spinner *ngIf="generatingGovId" [color]="'accent'" [diameter]="25" style="margin-left: 5px"></mat-spinner>
+      <button mat-icon-button title="Copy to clipboard" ngxClipboard [cbContent]="resultValue" [disabled]="busy">
+        <mat-icon class="copyIcon">content_copy</mat-icon>
+      </button>
+      <button mat-raised-button class="button" color="primary" (click)="generate()" title="Generate New Goverment ID" [disabled]="busy">Generate
+      </button>
+      <span class="message">{{generateMessage}}</span>
+    </div>
+    <br />
+    <div class="flexrow">
+      <mat-form-field>
+        <input matInput placeholder="Tax ID" [(ngModel)]="govIdToCheck" title="Check existing ID or generate from partial ID">
+      </mat-form-field>
+      <mat-spinner *ngIf="checkingGovId" [color]="'accent'" [diameter]="25" style="margin-left: 5px"></mat-spinner>
+      <mat-icon *ngIf="showCheckmark" class="checkmark">checkbox</mat-icon>
+      <mat-icon *ngIf="showGovIdTaken" class="xmark">clear</mat-icon>
+      <button mat-raised-button class="button" color="primary" (click)="checkGovId()" title="Check Goverment ID Availability" style="margin-left: 15px" [disabled]="busy">Check
+      </button>
+      <span class="message">{{checkMessage}}</span>
+    </div>
+    <div>
+      {{errorMessage | uppercase}}
+    </div>
+    <br />
+    <div class="alertmessage">
+    <mat-label *ngIf="showText">* Set BirthYear = 1989, Month = January, and Day = 01 For Member Birthdate Enrollment</mat-label>
+    <br />
+  </div>
+  </mat-card-content>
+</mat-card>
