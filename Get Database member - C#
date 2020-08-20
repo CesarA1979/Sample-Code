@@ -1,0 +1,103 @@
+using System;
+using System.Linq;
+using Common.Common;
+
+
+namespace Cesar_CodeSnippet
+{
+    public class DatabaseMember
+    {
+        #region Class Initialization
+        ///<summary>member</summary>
+        public string[] member;
+        #endregion
+
+        #region Member Type Data Value Method
+        public enum MemberType
+        {
+            /// Preferred Customer.
+            Preferred = 1,
+            /// Distributor.
+            Distributor = 2,
+            /// Customer.
+            Retail = 3,
+            /// Professional Customer.
+            Professional = 4,
+            /// Employee Member.
+            Employee = 5
+        }
+        #endregion
+
+        #region test that will get the Member info from Database.
+        //Test
+        public void GetMemberInfo_Dist_enUS()
+        {
+            Process(MemberType.Distributor, "en_US");
+        }
+        #endregion
+
+        #region Helper Methods
+        public void Process(MemberType memberType, string userCulture)
+        {
+            member = GetMember(memberType, userCulture);
+        }
+
+        private string[] GetMember(MemberType memberType, string userCulture)
+        {
+            //Verify that parameters contain the data
+            if (string.IsNullOrEmpty(memberType.ToString())) throw new ArgumentNullException(nameof(memberType), "The member type to look for (memberType) was null or was empty.");
+            if (string.IsNullOrEmpty(userCulture)) throw new ArgumentNullException(nameof(userCulture), "Language and market for the user (userCulture) was null or was empty.");
+            var culture = userCulture.Replace("_", "-");
+            int CustType = memberType == MemberType.Distributor ? 2 : 3;
+            string[] member = GetErMemberInfo(culture, CustType);
+            return member;
+        }
+
+        private string[] GetErMemberInfo(string culture, int custType)
+        {
+            MemberData result;
+            // Get the ISOCODE for a country.
+            var Country = culture.Substring(3, 2);
+            string[] myResult = new string[3];
+
+            var query = "select T.MemberId as CustId, T.UserName as Name, 'ER' as PaymentType "
+                          + "from "
+                          + "( "
+                           + "select a.MemberId, a.UserName, ROW_NUMBER() OVER(ORDER BY e.TotalPoints desc) AS row_num "
+                             + "from VO_ACCOUNTS.Account a "
+                             + "LEFT JOIN VO_SHOPPING.EssentialRewardInfo e ON a.ID = e.ID "
+                             + "LEFT JOIN VO_Accounts.Country vc ON a.COUNTRY_ID = vc.ID "
+                             + $"where a.language = '{culture}'  and e.TotalPoints > 10000 and e.consecutivemonthsoforders > 0.0 and Length(a.memberid) >= 7 "
+                              + $"and customertype_ID = {custType} and ROWNUM <= 5 "
+                                + $"and vc.ISOCODE2 = '{Country}' "
+                            + " )T "
+                          + "where T.row_num = 1";
+
+            using (var conn = SQL.GetOpenConnection())
+            {
+                result = conn.Query<MemberData>(query).First();
+            }
+
+            myResult[0] = result.CustId.ToString();
+            myResult[1] = result.Name;
+            myResult[2] = result.PaymentType;
+
+            if (myResult == null || myResult.Length == 0) throw new ArgumentNullException(nameof(myResult), "The member type to look for (memberType) was null or was empty.");
+            return myResult;
+        }
+
+        /// <summary>
+        /// Stores MemberData data.
+        /// </summary>
+        public class MemberData
+        {
+            /// <summary>CUSTID</summary>
+            public int CustId { get; set; }
+            /// <summary>NAME</summary>
+            public string Name { get; set; }
+            /// <summary>CONTACTNAME</summary>
+            public string PaymentType { get; set; }
+        }
+        #endregion
+    }
+}

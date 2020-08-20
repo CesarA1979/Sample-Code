@@ -1,0 +1,43 @@
+CREATE TABLE Employee
+(
+[ID] INT identity(1,1),
+[FirstName] Varchar(100),
+[LastName] Varchar(100),
+[Country] Varchar(100),
+)
+Go
+
+Insert into Employee ([FirstName], [LastName], [Country]) 
+values ('Raj', 'Gupta', 'India'),
+	('Raj', 'Gupta', 'India'),
+	('Mohan', 'Kumar', 'USA'),
+	('James', 'Barry', 'UK'),
+	('James', 'Barry', 'UK'),
+	('James', 'Barry', 'UK')
+
+
+Select 
+	FirstName, 
+	lastName, 
+	Country,
+	COUNT(*) as Duplicates
+FROM Employee
+GROUP BY FirstName, LastName, Country
+Having Count(*) > 1
+
+WITH CTE (firstname,
+	lastname,
+	Country,
+	DuplicateCount)
+AS (Select 
+	firstname, 
+	lastname, 
+	country,
+	ROW_NUMBER() Over(Partition BY firstName, LastName, Country
+	Order by id) AS DuplicateCount
+	from Employee)
+Select FirstName,
+	LastName,
+	Country
+From CTE
+where DuplicateCount = 1;

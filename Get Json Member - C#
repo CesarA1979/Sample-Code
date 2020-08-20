@@ -1,0 +1,96 @@
+using System;
+using System.Collections.Generic;
+using System.Text;
+using Newtonsoft.Json.Linq;
+
+namespace Cesar_CodeSnippet
+{
+    class Json_Member
+    {
+        #region Class Initialization
+        ///<summary>member</summary>
+        public string[] member;
+        ///<summary>Property to hold the Country String name</summary>
+        public static string JsonCountry { get; set; }
+        #endregion
+
+        #region test that will get the Member info from Json File.
+        //Test
+        public void GetMemberInfo_Dist_enUS()
+        {
+            Process("Distributor", "en_US");
+        }
+        #endregion
+
+        #region Helper Methods
+        public void Process(string memberType, string userCulture)
+        {
+            JsonCountry = GetCountryName(userCulture);
+            member = GetMiscellaneousMember(JsonCountry);
+        }
+
+        private static string[] GetMiscellaneousMember(string country)
+        {
+            var userId = "";
+            var username = "";
+            JObject miscMember = GetRandomMember(country);
+
+            userId = miscMember["userId"].ToString();
+            username = miscMember["username"].ToString();
+
+            return new[] { userId, username };
+        }
+
+        /// <summary>
+        /// Get a random member from the MiscellaneousUsers.json file.
+        /// </summary>
+        /// <param name="market"></param>
+        /// <returns></returns>
+        public static JObject GetRandomMember(string market)
+        {
+            var userFile = "miscellaneoususers.json";
+
+            var usersJson = JObject.Parse(File.ReadAllText(userFile));
+            var userList = new JArray();
+
+            foreach (var item in usersJson[market])
+            {
+                userList.Add(item);
+            }
+
+            if (userList == null || userList.Length == 0) throw new ArgumentNullException(nameof(userList), "The member type to look for Distributor was null or was empty.");
+
+            return (JObject)userList[Random.Next(userList.Count)];
+        }
+
+        /// <summary>
+        /// Get market Name based on the UserCulture.
+        /// </summary>
+        /// <param name="userCulture"></param>
+        /// <returns></returns>
+        public string GetCountryName(string userCulture)
+        {
+            //TODO it may need to implement more markets in the future.
+            var countryName = string.Empty;
+            if (userCulture.Contains("ja_JP"))
+            {
+                countryName = "Japan";
+            }
+            else if (userCulture.Contains("es_MX"))
+            {
+                countryName = "Mexico";
+            }
+            else if (userCulture.Contains("es_CR"))
+            {
+                countryName = "Costa Rica";
+            }
+            else
+            {
+                Assert.IsTrue(countryName == null, "The UserCulture is null and not country is assigned.");
+            }
+
+            return countryName;
+        }
+        #endregion       
+    }
+}
